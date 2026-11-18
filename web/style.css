@@ -402,7 +402,6 @@ html, body {
   width: 100%;
   max-width: 420px;
   height: auto;
-  aspect-ratio: attr(width) / attr(height);
   image-rendering: auto;
   border-radius: 3px;
   display: block;
