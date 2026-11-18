@@ -1,0 +1,5 @@
+/target/
+web/evo_paint.wasm
+.DS_Store
+Thumbs.db
+*.log

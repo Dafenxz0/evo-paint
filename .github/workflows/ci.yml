@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  check-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain with wasm32 target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+          targets: wasm32-unknown-unknown
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Clippy (host all-targets)
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Clippy (wasm32-unknown-unknown)
+        run: cargo clippy --target wasm32-unknown-unknown -- -D warnings
+
+      - name: Run Rust unit tests
+        run: cargo test
+
+      - name: Build release WASM module
+        run: cargo build --release --target wasm32-unknown-unknown
+
+      - name: Assemble Pages artifact
+        run: |
+          mkdir -p _site
+          cp -r web/* _site/
+          cp target/wasm32-unknown-unknown/release/evo_paint.wasm _site/evo_paint.wasm
+          ls -lh _site/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: check-and-build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

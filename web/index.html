@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>evo-paint — Evolutionary Triangle Painter (Rust + WASM)</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">▲</span>
+      <div>
+        <h1>evo-paint</h1>
+        <p class="subtitle">Rust/WASM Simulated Annealing Triangle Painter</p>
+      </div>
+    </div>
+
+    <div class="transport">
+      <button id="playPauseBtn" class="btn btn-primary" type="button" disabled>Pause</button>
+      <button id="stepBtn" class="btn" type="button" disabled>+250 Steps</button>
+      <button id="resetBtn" class="btn" type="button" disabled>Reset</button>
+      <span class="divider"></span>
+      <button id="downloadSvgBtn" class="btn btn-accent" type="button" disabled>Download .svg</button>
+      <button id="downloadPngBtn" class="btn" type="button" disabled>Download .png</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <aside class="sidebar">
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Target Source</h2>
+          <label class="upload-btn" for="imageInput">
+            Upload Image
+            <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp,image/*" hidden>
+          </label>
+        </div>
+        <div id="presetGrid" class="preset-grid" aria-label="Procedural target presets"></div>
+        <p id="dropHint" class="hint">Drop any PNG/JPG/WebP onto the target canvas to evolve it.</p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Evolution Parameters</h2>
+          <span id="wasmStatus" class="badge">Loading WASM…</span>
+        </div>
+
+        <label class="control">
+          <span class="control-row">
+            <span>Triangles</span>
+            <strong id="triCountVal" class="mono">120</strong>
+          </span>
+          <input id="triCountSlider" type="range" min="50" max="250" step="5" value="120">
+        </label>
+
+        <label class="control">
+          <span class="control-row">
+            <span>Annealing Heat</span>
+            <strong id="saVal" class="mono">0.35</strong>
+          </span>
+          <input id="saSlider" type="range" min="0" max="1.2" step="0.05" value="0.35">
+        </label>
+
+        <label class="control">
+          <span class="control-row">
+            <span>Steps / Frame</span>
+            <strong id="batchVal" class="mono">300</strong>
+          </span>
+          <input id="batchSlider" type="range" min="50" max="1200" step="50" value="300">
+        </label>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Convergence Sparkline</h2>
+          <span id="tempVal" class="mono muted">T 0.000</span>
+        </div>
+        <canvas id="sparklineCanvas" width="300" height="84"></canvas>
+        <div class="metrics-grid">
+          <div class="metric">
+            <span class="metric-label">Fitness</span>
+            <strong id="fitnessVal" class="mono">—</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">RMSE</span>
+            <strong id="rmseVal" class="mono">—</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">PSNR</span>
+            <strong id="psnrVal" class="mono">—</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Accept Rate</span>
+            <strong id="acceptRateVal" class="mono">—</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Gen / sec</span>
+            <strong id="genRateVal" class="mono">—</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Generations</span>
+            <strong id="genTotalVal" class="mono">0</strong>
+          </div>
+        </div>
+      </section>
+    </aside>
+
+    <section class="stage">
+      <div class="stage-toolbar">
+        <div class="segmented" role="group" aria-label="Comparison mode">
+          <button class="seg-btn active" data-mode="side" type="button">Side-by-Side</button>
+          <button class="seg-btn" data-mode="diff" type="button">Overlay Diff</button>
+          <button class="seg-btn" data-mode="split" type="button">Split Wipe</button>
+        </div>
+        <div id="dimensionsInfo" class="mono muted">192 × 192 px · 120 triangles</div>
+      </div>
+
+      <div id="stageDual" class="stage-grid">
+        <figure class="canvas-card" id="targetDropZone">
+          <figcaption>
+            <span>Target Raster</span>
+            <span id="sourceLabel" class="mono muted">Geometric Sunset</span>
+          </figcaption>
+          <div class="canvas-frame">
+            <canvas id="targetCanvas" width="192" height="192"></canvas>
+          </div>
+        </figure>
+
+        <figure class="canvas-card">
+          <figcaption>
+            <span>Evolved Triangles</span>
+            <span id="acceptedLabel" class="mono muted">0 accepted</span>
+          </figcaption>
+          <div class="canvas-frame">
+            <canvas id="evolvedCanvas" width="192" height="192"></canvas>
+          </div>
+        </figure>
+
+        <figure class="canvas-card diff-card" id="diffCard">
+          <figcaption>
+            <span>Overlay Diff (|ΔRGB| × 2.5)</span>
+            <span id="diffLabel" class="mono muted">Error Map</span>
+          </figcaption>
+          <div class="canvas-frame">
+            <canvas id="diffCanvas" width="192" height="192"></canvas>
+          </div>
+        </figure>
+      </div>
+
+      <div id="stageSplit" class="split-container hidden">
+        <div class="split-frame" id="splitFrame">
+          <canvas id="splitCanvas" width="384" height="384"></canvas>
+          <div id="splitHandle" class="split-handle" style="left: 50%;">
+            <span class="split-knob">⇆</span>
+          </div>
+        </div>
+        <div class="split-legend mono muted">
+          <span>Left: Target</span>
+          <span>Drag divider to inspect alignment</span>
+          <span>Right: Evolved</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
