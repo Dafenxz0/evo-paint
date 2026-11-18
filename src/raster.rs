@@ -288,7 +288,9 @@ pub fn region_sse(
         let t_start = ((py * img_w + rect.min_x) as usize) * 4;
         let b_row = &buf[b_start..b_start + count * 4];
         let t_row = &target[t_start..t_start + count * 4];
-        for (bp, tp) in b_row.as_chunks::<4>().0.iter().zip(t_row.as_chunks::<4>().0) {
+        let (b_px, _) = b_row.as_chunks::<4>();
+        let (t_px, _) = t_row.as_chunks::<4>();
+        for (bp, tp) in b_px.iter().zip(t_px) {
             let dr = i32::from(bp[0]) - i32::from(tp[0]);
             let dg = i32::from(bp[1]) - i32::from(tp[1]);
             let db = i32::from(bp[2]) - i32::from(tp[2]);
@@ -301,7 +303,9 @@ pub fn region_sse(
 /// Computes exact RGB sum-of-squared-errors over the full frame.
 pub fn full_sse(canvas: &[u8], target: &[u8]) -> u64 {
     let mut sse = 0_u64;
-    for (cp, tp) in canvas.as_chunks::<4>().0.iter().zip(target.as_chunks::<4>().0) {
+    let (c_px, _) = canvas.as_chunks::<4>();
+    let (t_px, _) = target.as_chunks::<4>();
+    for (cp, tp) in c_px.iter().zip(t_px) {
         let dr = i32::from(cp[0]) - i32::from(tp[0]);
         let dg = i32::from(cp[1]) - i32::from(tp[1]);
         let db = i32::from(cp[2]) - i32::from(tp[2]);
