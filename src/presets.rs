@@ -135,7 +135,7 @@ fn cyber_eye(u: f32, v: f32) -> [f32; 3] {
     let mut col = [10.0, 12.0, 24.0];
 
     // Outer metallic bezel
-    if r < 0.45 && r >= 0.36 {
+    if (0.36..0.45).contains(&r) {
         let ring = ((r - 0.36) / 0.09 * PI).sin();
         col = lerp_rgb([26.0, 34.0, 58.0], [72.0, 108.0, 160.0], ring);
         if (angle * 12.0).sin() > 0.85 {
@@ -144,7 +144,7 @@ fn cyber_eye(u: f32, v: f32) -> [f32; 3] {
     }
 
     // Iris radial fibers
-    if r < 0.36 && r >= 0.14 {
+    if (0.14..0.36).contains(&r) {
         let t = (r - 0.14) / 0.22;
         let fiber = 0.5 + 0.3 * (angle * 18.0).sin() + 0.2 * (angle * 31.0 + r * 24.0).cos();
         let inner_c = [255.0, 168.0, 36.0];

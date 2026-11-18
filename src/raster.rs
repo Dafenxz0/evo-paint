@@ -111,7 +111,7 @@ pub fn triangle_bbox(tri: &Triangle, width: i32, height: i32) -> BBox {
 /// Fills an RGBA buffer representing a rectangle of size (buf_w x buf_h) with an opaque RGB background.
 pub fn clear_rgba(buf: &mut [u8], pixel_count: usize, bg: [u8; 3]) {
     let needed = pixel_count * 4;
-    for chunk in buf[..needed].chunks_exact_mut(4) {
+    for chunk in buf[..needed].as_chunks_mut::<4>().0 {
         chunk[0] = bg[0];
         chunk[1] = bg[1];
         chunk[2] = bg[2];
@@ -201,7 +201,7 @@ pub fn rasterize_triangle(
         let row_offset = (py - buf_y0) * buf_w;
         let col_start = (row_offset + (px_start - buf_x0)) as usize * 4;
         let col_end = (row_offset + (px_end - buf_x0) + 1) as usize * 4;
-        for px in buf[col_start..col_end].chunks_exact_mut(4) {
+        for px in buf[col_start..col_end].as_chunks_mut::<4>().0 {
             px[0] = ((sr + u32::from(px[0]) * inv_a + 127) / 255) as u8;
             px[1] = ((sg + u32::from(px[1]) * inv_a + 127) / 255) as u8;
             px[2] = ((sb + u32::from(px[2]) * inv_a + 127) / 255) as u8;
@@ -288,7 +288,7 @@ pub fn region_sse(
         let t_start = ((py * img_w + rect.min_x) as usize) * 4;
         let b_row = &buf[b_start..b_start + count * 4];
         let t_row = &target[t_start..t_start + count * 4];
-        for (bp, tp) in b_row.chunks_exact(4).zip(t_row.chunks_exact(4)) {
+        for (bp, tp) in b_row.as_chunks::<4>().0.iter().zip(t_row.as_chunks::<4>().0) {
             let dr = i32::from(bp[0]) - i32::from(tp[0]);
             let dg = i32::from(bp[1]) - i32::from(tp[1]);
             let db = i32::from(bp[2]) - i32::from(tp[2]);
@@ -301,7 +301,7 @@ pub fn region_sse(
 /// Computes exact RGB sum-of-squared-errors over the full frame.
 pub fn full_sse(canvas: &[u8], target: &[u8]) -> u64 {
     let mut sse = 0_u64;
-    for (cp, tp) in canvas.chunks_exact(4).zip(target.chunks_exact(4)) {
+    for (cp, tp) in canvas.as_chunks::<4>().0.iter().zip(target.as_chunks::<4>().0) {
         let dr = i32::from(cp[0]) - i32::from(tp[0]);
         let dg = i32::from(cp[1]) - i32::from(tp[1]);
         let db = i32::from(cp[2]) - i32::from(tp[2]);

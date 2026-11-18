@@ -298,7 +298,7 @@ mod tests {
         for id in 0..PRESET_COUNT {
             let rgba = generate_preset(id, 48, 36);
             assert_eq!(rgba.len(), 48 * 36 * 4);
-            assert!(rgba.chunks_exact(4).all(|px| px[3] == 255));
+            assert!(rgba.as_chunks::<4>().0.iter().all(|px| px[3] == 255));
         }
     }
 

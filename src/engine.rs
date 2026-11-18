@@ -470,7 +470,7 @@ fn compute_mean_bg(target: &[u8]) -> [u8; 3] {
     let mut sr = 0_u64;
     let mut sg = 0_u64;
     let mut sb = 0_u64;
-    for chunk in target.chunks_exact(4) {
+    for chunk in target.as_chunks::<4>().0 {
         sr += u64::from(chunk[0]);
         sg += u64::from(chunk[1]);
         sb += u64::from(chunk[2]);
