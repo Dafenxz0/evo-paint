@@ -93,13 +93,15 @@ fn geometric_sunset(u: f32, v: f32) -> [f32; 3] {
     }
 
     // Layered mountain silhouettes
-    let ridge_far = 0.56 - 0.14 * (1.0 - (u - 0.25).abs() * 3.2).max(0.0)
+    let ridge_far = 0.56
+        - 0.14 * (1.0 - (u - 0.25).abs() * 3.2).max(0.0)
         - 0.17 * (1.0 - (u - 0.72).abs() * 2.8).max(0.0);
     if v >= ridge_far && v < horizon {
         col = [42.0, 22.0, 68.0];
     }
 
-    let ridge_near = 0.62 - 0.11 * (1.0 - (u - 0.14).abs() * 3.8).max(0.0)
+    let ridge_near = 0.62
+        - 0.11 * (1.0 - (u - 0.14).abs() * 3.8).max(0.0)
         - 0.08 * (1.0 - (u - 0.52).abs() * 4.5).max(0.0)
         - 0.13 * (1.0 - (u - 0.86).abs() * 3.4).max(0.0);
     if v >= ridge_near && v < horizon {
@@ -144,9 +146,7 @@ fn cyber_eye(u: f32, v: f32) -> [f32; 3] {
     // Iris radial fibers
     if r < 0.36 && r >= 0.14 {
         let t = (r - 0.14) / 0.22;
-        let fiber = 0.5
-            + 0.3 * (angle * 18.0).sin()
-            + 0.2 * (angle * 31.0 + r * 24.0).cos();
+        let fiber = 0.5 + 0.3 * (angle * 18.0).sin() + 0.2 * (angle * 31.0 + r * 24.0).cos();
         let inner_c = [255.0, 168.0, 36.0];
         let mid_c = [0.0, 210.0, 235.0];
         let outer_c = [18.0, 52.0, 128.0];
@@ -168,7 +168,11 @@ fn cyber_eye(u: f32, v: f32) -> [f32; 3] {
 
     let g1 = ((u - 0.43).powi(2) + (v - 0.41).powi(2)).sqrt();
     if g1 < 0.055 {
-        col = lerp_rgb(col, [255.0, 255.0, 255.0], 1.0 - smoothstep(0.03, 0.055, g1));
+        col = lerp_rgb(
+            col,
+            [255.0, 255.0, 255.0],
+            1.0 - smoothstep(0.03, 0.055, g1),
+        );
     }
     let g2 = ((u - 0.59).powi(2) + (v - 0.57).powi(2)).sqrt();
     if g2 < 0.025 {
@@ -209,12 +213,20 @@ fn spiral_nebula(u: f32, v: f32) -> [f32; 3] {
 
 fn retro_mountain(u: f32, v: f32) -> [f32; 3] {
     // Warm sunlit sky
-    let mut col = lerp_rgb([42.0, 74.0, 134.0], [250.0, 186.0, 118.0], (v / 0.66).clamp(0.0, 1.0));
+    let mut col = lerp_rgb(
+        [42.0, 74.0, 134.0],
+        [250.0, 186.0, 118.0],
+        (v / 0.66).clamp(0.0, 1.0),
+    );
 
     // Sun orb
     let sd = ((u - 0.74).powi(2) + (v - 0.24).powi(2)).sqrt();
     if sd < 0.095 {
-        col = lerp_rgb(col, [255.0, 242.0, 178.0], 1.0 - smoothstep(0.085, 0.095, sd));
+        col = lerp_rgb(
+            col,
+            [255.0, 242.0, 178.0],
+            1.0 - smoothstep(0.085, 0.095, sd),
+        );
     }
 
     // Twin geometric peaks with lit right slope and shaded left slope

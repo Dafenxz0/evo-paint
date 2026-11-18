@@ -381,14 +381,13 @@ impl Engine {
         if self.rng.next_f32() < 0.25 {
             // Pull color toward target pixel under centroid for faster convergence
             let cx = ((tri.x0 + tri.x1 + tri.x2) / 3.0).clamp(0.0, (self.width - 1) as f32) as u32;
-            let cy =
-                ((tri.y0 + tri.y1 + tri.y2) / 3.0).clamp(0.0, (self.height - 1) as f32) as u32;
+            let cy = ((tri.y0 + tri.y1 + tri.y2) / 3.0).clamp(0.0, (self.height - 1) as f32) as u32;
             let idx = ((cy * self.width + cx) * 4) as usize;
             tri.r = (i32::from(self.target[idx]) + self.rng.range_i32(-22, 22)).clamp(0, 255) as u8;
-            tri.g = (i32::from(self.target[idx + 1]) + self.rng.range_i32(-22, 22)).clamp(0, 255)
-                as u8;
-            tri.b = (i32::from(self.target[idx + 2]) + self.rng.range_i32(-22, 22)).clamp(0, 255)
-                as u8;
+            tri.g =
+                (i32::from(self.target[idx + 1]) + self.rng.range_i32(-22, 22)).clamp(0, 255) as u8;
+            tri.b =
+                (i32::from(self.target[idx + 2]) + self.rng.range_i32(-22, 22)).clamp(0, 255) as u8;
             tri.a = (i32::from(tri.a) + self.rng.range_i32(-30, 30)).clamp(12, 230) as u8;
             return tri;
         }
@@ -476,7 +475,11 @@ fn compute_mean_bg(target: &[u8]) -> [u8; 3] {
         sg += u64::from(chunk[1]);
         sb += u64::from(chunk[2]);
     }
-    [(sr / pixels) as u8, (sg / pixels) as u8, (sb / pixels) as u8]
+    [
+        (sr / pixels) as u8,
+        (sg / pixels) as u8,
+        (sb / pixels) as u8,
+    ]
 }
 
 fn seed_triangle(rng: &mut Rng, width: u32, height: u32, target: &[u8]) -> Triangle {
